@@ -29,13 +29,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show repo structure
-        run: find . -name "manage.py" | head -20
-
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Create manage.py if missing
+        run: |
+          if [ ! -f manage.py ]; then
+            cat > manage.py << 'MANAGEPY'
+#!/usr/bin/env python
+import os, sys
+
+if __name__ == '__main__':
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(sys.argv)
+MANAGEPY
+          fi
 
       - name: Install dependencies
         run: |
