@@ -1,0 +1,41 @@
+{% extends "ncbw/base.html" %}
+{% block content %}
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; background: linear-gradient(135deg, #0d0d0d 0%, #1a1200 100%);">
+  <div style="width:100%; max-width:440px;">
+
+    <div style="text-align:center; margin-bottom:28px;">
+      <h1 style="font-size:22px; color:#B8860B;">Create Account</h1>
+      <p style="color:#888; font-size:14px; margin-top:6px;">Join the NC100BW Training Portal</p>
+    </div>
+
+    <div class="card">
+      {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label>First Name</label>
+            <input type="text" name="first_name" placeholder="First name" required>
+          </div>
+          <div>
+            <label>Last Name</label>
+            <input type="text" name="last_name" placeholder="Last name" required>
+          </div>
+        </div>
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Create a password" required>
+        <button type="submit" class="btn btn-gold" style="width:100%; padding:12px; font-size:15px;">Create Account</button>
+      </form>
+
+      <p style="text-align:center; margin-top:16px; color:#888; font-size:13px;">
+        Already have an account?
+        <a href="{% url 'login' %}" style="color:#B8860B; text-decoration:none;">Login</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

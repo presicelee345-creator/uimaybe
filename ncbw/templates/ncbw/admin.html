@@ -1,0 +1,109 @@
+{% extends "ncbw/base.html" %}
+{% block content %}
+<nav>
+  <span class="logo">NC100BW Training &nbsp;·&nbsp; <span style="color:#888; font-size:14px;">Admin</span></span>
+  <div class="nav-links">
+    <span style="color:#888; font-size:13px;">{{ user_name }}</span>
+    <a href="{% url 'logout' %}">Logout</a>
+  </div>
+</nav>
+
+<div style="max-width:960px; margin:0 auto; padding:30px 20px;">
+
+  <!-- Stats -->
+  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:14px; margin-bottom:28px;">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:32px; font-weight:bold; color:#B8860B;">{{ all_users.count }}</div>
+      <div style="color:#888; font-size:13px; margin-top:4px;">Total Users</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:32px; font-weight:bold; color:#B8860B;">{{ reports.count|default:reports|length }}</div>
+      <div style="color:#888; font-size:13px; margin-top:4px;">Trainees</div>
+    </div>
+  </div>
+
+  <!-- Trainee Progress Report -->
+  <div class="card" style="margin-bottom:28px;">
+    <h3 style="margin-bottom:18px; color:#B8860B;">Trainee Progress</h3>
+    {% if reports %}
+    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+      <thead>
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left; padding:10px; color:#888;">Name</th>
+          <th style="text-align:left; padding:10px; color:#888;">Email</th>
+          <th style="text-align:left; padding:10px; color:#888;">Track</th>
+          <th style="text-align:left; padding:10px; color:#888;">Progress</th>
+          <th style="text-align:left; padding:10px; color:#888;">Courses Done</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr style="border-bottom:1px solid #222;">
+          <td style="padding:10px;">{{ r.user.first_name }} {{ r.user.last_name }}</td>
+          <td style="padding:10px; color:#888;">{{ r.user.email }}</td>
+          <td style="padding:10px;">
+            {% if r.user.selected_track %}
+              <span class="badge badge-gold">{{ r.user.selected_track }}</span>
+            {% else %}
+              <span class="badge badge-gray">Not selected</span>
+            {% endif %}
+          </td>
+          <td style="padding:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="progress-bar" style="width:100px;">
+                <div class="progress-fill" style="width:{{ r.overall }}%;"></div>
+              </div>
+              <span style="color:#B8860B; font-weight:bold;">{{ r.overall }}%</span>
+            </div>
+          </td>
+          <td style="padding:10px; color:#888;">{{ r.completed }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#888; text-align:center; padding:20px;">No trainees yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- All Users -->
+  <div class="card">
+    <h3 style="margin-bottom:18px; color:#B8860B;">All Users</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+      <thead>
+        <tr style="border-bottom:1px solid #333;">
+          <th style="text-align:left; padding:10px; color:#888;">Name</th>
+          <th style="text-align:left; padding:10px; color:#888;">Email</th>
+          <th style="text-align:left; padding:10px; color:#888;">Role</th>
+          <th style="text-align:left; padding:10px; color:#888;">Joined</th>
+          <th style="text-align:left; padding:10px; color:#888;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in all_users %}
+        <tr style="border-bottom:1px solid #222;">
+          <td style="padding:10px;">{{ u.first_name }} {{ u.last_name }}</td>
+          <td style="padding:10px; color:#888;">{{ u.email }}</td>
+          <td style="padding:10px;">
+            <span class="badge {% if u.role == 'admin' %}badge-gold{% else %}badge-gray{% endif %}">
+              {{ u.role }}
+            </span>
+          </td>
+          <td style="padding:10px; color:#888;">{{ u.created_at|date:"M d, Y" }}</td>
+          <td style="padding:10px;">
+            {% if u.role != 'admin' %}
+            <form method="POST" action="{% url 'admin_delete_user' u.id %}"
+                  onsubmit="return confirm('Delete {{ u.first_name }}?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-red" style="font-size:12px; padding:5px 12px;">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

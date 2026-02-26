@@ -1,0 +1,41 @@
+{% extends "ncbw/base.html" %}
+{% block content %}
+<nav>
+  <span class="logo">NC100BW Training</span>
+  <div class="nav-links">
+    <a href="{% url 'logout' %}">Logout</a>
+  </div>
+</nav>
+
+<div style="max-width:700px; margin:60px auto; padding:20px;">
+  <h2 style="text-align:center; font-size:24px; margin-bottom:8px;">Choose Your Training Track</h2>
+  <p style="text-align:center; color:#888; margin-bottom:32px;">Select the role you are training for. This cannot be changed later.</p>
+
+  <form method="POST" action="{% url 'select_track' %}">
+    {% csrf_token %}
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:14px;">
+      {% for track_id, track_name in tracks %}
+      <label style="cursor:pointer;">
+        <input type="radio" name="track_id" value="{{ track_id }}" style="display:none;" class="track-radio">
+        <div class="card track-card" style="text-align:center; cursor:pointer; transition:all 0.2s; border:2px solid #333;">
+          <div style="font-size:28px; margin-bottom:10px;">🎓</div>
+          <div style="font-weight:bold; font-size:14px;">{{ track_name }}</div>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:28px;">
+      <button type="submit" class="btn btn-gold" style="padding:12px 40px; font-size:15px;">Start Training</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.querySelectorAll('.track-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.track-card').forEach(c => c.style.borderColor = '#333');
+      radio.closest('label').querySelector('.track-card').style.borderColor = '#B8860B';
+    });
+  });
+</script>
+{% endblock %}

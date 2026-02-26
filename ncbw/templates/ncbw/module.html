@@ -1,0 +1,163 @@
+{% extends "ncbw/base.html" %}
+{% block content %}
+<nav>
+  <span class="logo">NC100BW Training</span>
+  <div class="nav-links">
+    <a href="{% url 'dashboard' %}">← Dashboard</a>
+    <a href="{% url 'logout' %}">Logout</a>
+  </div>
+</nav>
+
+<div style="max-width:860px; margin:0 auto; padding:30px 20px;">
+
+  <!-- Header -->
+  <div class="card" style="margin-bottom:24px;">
+    <p style="color:#888; font-size:13px; margin-bottom:4px;">{{ track_name }} / Module {{ module_index|add:1 }}</p>
+    <h2 style="font-size:22px; color:#B8860B;">{{ module.title }}</h2>
+    <p style="color:#aaa; margin-top:8px; font-size:14px;">{{ module.description }}</p>
+  </div>
+
+  <!-- Courses -->
+  <h3 style="margin-bottom:14px; color:#ccc;">Courses</h3>
+  {% for course in module.courses %}
+  {% with ci=forloop.counter0 %}
+  <div class="card" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"
+       id="course-{{ ci }}">
+    <div style="flex:1;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="course-check" id="check-{{ ci }}" style="font-size:20px;">
+          {% if progress.courses|default:"{}"|length > 0 and ci in progress.courses and progress.courses|dictsort:ci %}✅{% else %}⬜{% endif %}
+        </span>
+        <div>
+          <div style="font-weight:bold; font-size:14px;">{{ course.title }}</div>
+          <div style="color:#888; font-size:12px; margin-top:2px;">{{ course.platform }} &nbsp;·&nbsp; {{ course.duration }}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      {% if course.link %}
+      <a href="{{ course.link }}" target="_blank" class="btn btn-gray" style="font-size:13px; padding:7px 14px;">Open Course</a>
+      {% endif %}
+      <button class="btn btn-gold mark-btn" style="font-size:13px; padding:7px 14px;"
+              data-ci="{{ ci }}"
+              onclick="markComplete({{ ci }})">Mark Complete</button>
+    </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+
+  <!-- Quiz Section -->
+  <div class="card" style="margin-top:28px;">
+    <h3 style="margin-bottom:6px; color:#B8860B;">📝 {{ module.quiz.title }}</h3>
+    <p style="color:#888; font-size:13px; margin-bottom:20px;">Duration: {{ module.quiz.duration }} &nbsp;·&nbsp; Passing score: 70%</p>
+
+    {% if progress.quiz_passed %}
+      <div class="success">✅ Quiz passed! Score: {{ progress.quiz_score|floatformat:0 }}%</div>
+    {% else %}
+      {% if progress.quiz_attempts %}
+        <div class="error">Last score: {{ progress.quiz_score|floatformat:0 }}% — Try again!</div>
+      {% endif %}
+
+      <div id="quiz-area">
+        <p style="color:#ccc; margin-bottom:16px; font-size:14px;">Answer these sample questions to complete the module quiz:</p>
+
+        <div style="margin-bottom:16px;">
+          <p style="color:#ddd; margin-bottom:10px;">1. What is the primary goal of this module?</p>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q1" value="a"> Apply the concepts in real-world scenarios
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q1" value="b"> Memorize all course titles
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q1" value="c"> Complete courses as fast as possible
+          </label>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <p style="color:#ddd; margin-bottom:10px;">2. Which approach best supports your leadership role?</p>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q2" value="a"> Acting alone without consulting others
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q2" value="b"> Continuous learning and collaboration
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q2" value="c"> Delegating all responsibilities
+          </label>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <p style="color:#ddd; margin-bottom:10px;">3. What should you do after completing each course?</p>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q3" value="a"> Skip to the next module immediately
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q3" value="b"> Reflect and apply the knowledge
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer; color:#ccc;">
+            <input type="radio" name="q3" value="c"> Delete your progress
+          </label>
+        </div>
+
+        <button class="btn btn-gold" style="padding:10px 28px;" onclick="submitQuiz()">Submit Quiz</button>
+        <div id="quiz-result" style="margin-top:14px;"></div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  const TRACK_ID     = "{{ track_id }}";
+  const MODULE_INDEX = {{ module_index }};
+
+  function markComplete(courseIndex) {
+    fetch("{% url 'mark_complete' %}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({track_id: TRACK_ID, module_index: MODULE_INDEX, course_index: courseIndex})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('check-' + courseIndex).textContent = '✅';
+        document.querySelector('.mark-btn[data-ci="' + courseIndex + '"]').textContent = 'Completed';
+        document.querySelector('.mark-btn[data-ci="' + courseIndex + '"]').disabled = true;
+      }
+    });
+  }
+
+  function submitQuiz() {
+    const answers = {
+      q1: document.querySelector('input[name="q1"]:checked')?.value,
+      q2: document.querySelector('input[name="q2"]:checked')?.value,
+      q3: document.querySelector('input[name="q3"]:checked')?.value,
+    };
+
+    const correct = (answers.q1 === 'a' ? 1 : 0) + (answers.q2 === 'b' ? 1 : 0) + (answers.q3 === 'b' ? 1 : 0);
+    const score = Math.round((correct / 3) * 100);
+
+    fetch("{% url 'submit_quiz' %}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({track_id: TRACK_ID, module_index: MODULE_INDEX, score: score})
+    })
+    .then(r => r.json())
+    .then(data => {
+      const div = document.getElementById('quiz-result');
+      if (data.passed) {
+        div.innerHTML = '<div class="success">✅ Passed! Score: ' + data.score + '%</div>';
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        div.innerHTML = '<div class="error">Score: ' + data.score + '% — Need 70% to pass. Try again.</div>';
+      }
+    });
+  }
+
+  function getCookie(name) {
+    let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+</script>
+{% endblock %}
