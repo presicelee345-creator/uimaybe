@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ncbw-final
 
     services:
       postgres:
@@ -31,6 +28,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Show repo structure
+        run: find . -name "manage.py" | head -20
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
