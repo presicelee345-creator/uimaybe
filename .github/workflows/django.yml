@@ -34,20 +34,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create manage.py if missing
-        run: |
-          if [ ! -f manage.py ]; then
-            cat > manage.py << 'MANAGEPY'
-#!/usr/bin/env python
-import os, sys
-
-if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-    from django.core.management import execute_from_command_line
-    execute_from_command_line(sys.argv)
-MANAGEPY
-          fi
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
